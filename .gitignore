@@ -1,0 +1,6 @@
+*.egg0info
+*.pyc
+.coverage
+.tox
+/venv*
+dist

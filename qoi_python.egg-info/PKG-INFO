@@ -1,0 +1,15 @@
+Metadata-Version: 2.1
+Name: qoi-python
+Version: 0.0.1
+Summary: QOI format support for Python
+Home-page: https://github.com/essamgouda97/qoi-python
+Author: Essam Gouda
+Author-email: essamgouda97@hotmail.com
+License: MIT
+Platform: UNKNOWN
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+UNKNOWN
+

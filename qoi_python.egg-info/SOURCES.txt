@@ -1,0 +1,8 @@
+LICENSE
+setup.cfg
+setup.py
+./qoi-python/__init__.py
+qoi_python.egg-info/PKG-INFO
+qoi_python.egg-info/SOURCES.txt
+qoi_python.egg-info/dependency_links.txt
+qoi_python.egg-info/top_level.txt
