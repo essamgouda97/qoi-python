@@ -1,0 +1,1 @@
+# QOI format support for python (UNDER DEVELOPMENT)
