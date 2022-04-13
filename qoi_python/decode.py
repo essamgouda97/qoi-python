@@ -10,35 +10,21 @@ import numpy as np
 LIST_MAX_SIZE = 64
 
 
-def QOI_OP_INDEX(chunk: Any, pixel_list: list[list[int]]) -> list[int]:
+def QOI_OP_INDEX(chunk: int, pixel_list: list[list[int]]) -> list[int]:
     return pixel_list[chunk]
 
 
-def QOI_OP_DIFF(chunk: Any, prev_pixel: list[int]) -> list[int]:
-    dr = ((chunk & 0b00110000) >> 4) + 2
-    dg = ((chunk & 0b00001100) >> 2) + 2
-    db = (chunk & 0b00000011) + 2
-
-    r = (prev_pixel[0] + dr) & 0xff
-    g = (prev_pixel[1] + dg) & 0xff
-    b = (prev_pixel[2] + db) & 0xff
-    a = prev_pixel[3]
-
-    return [r, g, b, a]
-
-
-def QOI_OP_LUMA(dg: int, dr: int, db: int, prev_pixel: list[int]) -> list[int]:
-    r = (prev_pixel[0] + dr) & 0xff
-    g = (prev_pixel[1] + dg) & 0xff
-    b = (prev_pixel[2] + db) & 0xff
+def add_diff(dr: int, dg: int, db: int, prev_pixel: list[int]) -> list[int]:
+    r = (prev_pixel[0] + dr)
+    g = (prev_pixel[1] + dg)
+    b = (prev_pixel[2] + db)
     a = prev_pixel[3]
 
     return [r, g, b, a]
 
 
 def QOI_OP_RUN(chunk: Any) -> int:
-    run = (chunk & 0b00111111) + 1
-    return run
+    return (chunk & 0x3f) + 1
 
 
 def data_gen_func(data: Any) -> Generator[int, int, str]:
@@ -56,20 +42,24 @@ def decode(path: str) -> np.ndarray:
     width, height, channels, colorspace = unpack('>IIBB', data[4:14])
     print(f'{width}:{height}:{channels}:{colorspace}')
 
-    end_bytes = data[-2:]  # Get the end bytes
-    if end_bytes != b'\x00\x01':
+    end_bytes = data[-8:]  # Get the end bytes
+    if end_bytes != b'\x00\x00\x00\x00\x00\x00\x00\x01':
         raise TypeError('Invalid end bytes')
 
     prev_pixel = [0, 0, 0, 255]  # rgba
-    data = data[14:-2]
+    data = data[14:-8]
     data_gen = data_gen_func(data)
     pixel_list = [[0, 0, 0, 0]] * LIST_MAX_SIZE
     img_array = np.zeros([height, width, 4], dtype=np.uint8)
     height_cnt = 0
     width_cnt = 0
 
-    while height_cnt < height or width_cnt < width:
-        chunk = next(data_gen)
+    while True:
+        try:
+            chunk = next(data_gen)
+        except StopIteration:
+            break
+        run = 1
         if chunk == 255:
             r = next(data_gen)
             g = next(data_gen)
@@ -85,19 +75,19 @@ def decode(path: str) -> np.ndarray:
 
             if tag == 0:
                 r, g, b, a = QOI_OP_INDEX(chunk, pixel_list)
-                run = 1
             elif tag == 1:
-                r, g, b, a = QOI_OP_DIFF(chunk, prev_pixel)
-                run = 1
+                dr = ((chunk >> 4) & 0x03) - 2
+                dg = ((chunk >> 2) & 0x03) - 2
+                db = (chunk & 0x03) - 2
+                r, g, b, a = add_diff(dr, dg, db, prev_pixel)
             elif tag == 2:
-                dg = chunk & 0b00111111 + 32
+                dg = (chunk & 0x3f) - 32
                 chunk = next(data_gen)
-                dr_dg = ((chunk & 0b11110000) >> 4) + 8
-                db_dg = (chunk & 0b00001111) + 8
+                dr_dg = ((chunk >> 4) & 0x0f) - 8
+                db_dg = (chunk & 0x0f) - 8
                 dr = dr_dg + dg
                 db = db_dg + dg
-                r, g, b, a = QOI_OP_LUMA(dg, dr, db, prev_pixel)
-                run = 1
+                r, g, b, a = add_diff(dr, dg, db, prev_pixel)
             elif tag == 3:
                 run = QOI_OP_RUN(chunk)
                 r, g, b, a = prev_pixel
@@ -111,6 +101,7 @@ def decode(path: str) -> np.ndarray:
             if width_cnt == width:
                 width_cnt = 0
                 height_cnt += 1
+    return img_array
 
 
 def index_position(pixel: list[int]) -> int:
@@ -118,7 +109,7 @@ def index_position(pixel: list[int]) -> int:
 
 
 if __name__ == '__main__':
-    img = decode('/home/essamgouda97/Desktop/Projects/qoi-python/data/dice.qoi')
-    # from matplotlib import pyplot as plt
-    # plt.imshow(img, interpolation='nearest')
-    # plt.show()
+    img_array = decode('/home/essamgouda97/Desktop/Projects/qoi-python/data/testcard_rgba.qoi')
+    from PIL import Image
+    img = Image.fromarray(img_array, 'RGBA')
+    img.save('t.png')
