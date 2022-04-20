@@ -6,11 +6,9 @@ from typing import Generator
 
 import numpy as np
 
-LIST_MAX_SIZE = 64
+from utils import index_position, LIST_MAX_SIZE
 
 
-def index_position(pixel: list[int]) -> int:
-    return (pixel[0] * 3 + pixel[1] * 5 + pixel[2] * 7 + pixel[3] * 11) % LIST_MAX_SIZE
 
 
 def QOI_OP_RGBA(chunk: int, pixel_list: list[list[int]], prev_pixel: list[int], data_gen: Generator[int, int, str]) -> tuple[int, int, int, int, int]:
