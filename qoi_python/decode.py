@@ -5,10 +5,8 @@ from typing import Any
 from typing import Generator
 
 import numpy as np
-
-from utils import index_position, LIST_MAX_SIZE
-
-
+from utils import index_position
+from utils import LIST_MAX_SIZE
 
 
 def QOI_OP_RGBA(chunk: int, pixel_list: list[list[int]], prev_pixel: list[int], data_gen: Generator[int, int, str]) -> tuple[int, int, int, int, int]:
