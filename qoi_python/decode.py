@@ -7,6 +7,8 @@ from typing import Generator
 import numpy as np
 from utils import index_position
 from utils import LIST_MAX_SIZE
+from utils import QOI_MAGIC
+from utils import QOI_PADDING
 
 
 def QOI_OP_RGBA(chunk: int, pixel_list: list[list[int]], prev_pixel: list[int], data_gen: Generator[int, int, str]) -> tuple[int, int, int, int, int]:
@@ -45,7 +47,7 @@ def is_valid_format(data: bytes) -> bool:
     magic_bytes = data[:4]  # Get the magic bytes
     end_bytes = data[-8:]  # Get the end bytes
 
-    return magic_bytes == b'qoif' and end_bytes == b'\x00\x00\x00\x00\x00\x00\x00\x01'
+    return magic_bytes == QOI_MAGIC and end_bytes == QOI_PADDING
 
 
 def decode(path: str) -> np.ndarray:
@@ -95,7 +97,7 @@ def decode(path: str) -> np.ndarray:
 
 
 if __name__ == '__main__':
-    img_array = decode('/home/essamgouda97/Desktop/Projects/qoi-python/data/testcard_rgba.qoi')
+    img_array = decode('./test.qoi')
     from PIL import Image
     img = Image.fromarray(img_array, 'RGBA')
     img.save('t.png')
